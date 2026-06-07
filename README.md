@@ -2,13 +2,6 @@
 
 Automated code analysis and refactoring powered by generative AI.
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Stars](https://img.shields.io/github/stars/vaibhavidhenge23/code-reviewer?style=social)
-![Issues](https://img.shields.io/github/issues/vaibhavidhenge23/code-reviewer)
-![Pull Requests](https://img.shields.io/github/issues-pr/vaibhavidhenge23/code-reviewer)
-![Last Commit](https://img.shields.io/github/last-commit/vaibhavidhenge23/code-reviewer)
-![Repo Size](https://img.shields.io/github/repo-size/vaibhavidhenge23/code-reviewer)
-
 ## Overview
 
 CodeReview AI is an intelligent tool that helps developers write cleaner and more secure code. By leveraging the Gemini 2.0 Flash model, the application acts as an automated pair programmer. It evaluates code snippets submitted via the web interface, scores the overall quality, highlights specific issues categorized by severity, and provides a fully refactored version of the code. The system is designed for speed and simplicity to ensure developers can seamlessly integrate it into their daily workflows.
@@ -138,6 +131,3 @@ Add exporting capabilities for review reports (PDF/Markdown).
 
 License
 Distributed under the MIT License. See LICENSE for more information.
-    C --> B
-    B -->|Save document| E[(MongoDB)]
-    B -->|Return structured data| A
