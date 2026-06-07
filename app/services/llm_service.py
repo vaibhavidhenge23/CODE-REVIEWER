@@ -12,29 +12,26 @@ llm = ChatGoogleGenerativeAI(
 
 prompt = PromptTemplate(
     input_variables=["code", "language"],
-    template="""
-You are an expert code reviewer. Review the following {language} code.
+    template="""Review this {language} code. Return ONLY valid JSON, no markdown.
 
-Provide feedback in this exact JSON format:
 {{
-  "summary": "brief overall assessment",
+  "summary": "one line assessment",
+  "score": "X/10",
   "issues": [
     {{
-      "severity": "critical/warning/suggestion",
+      "severity": "critical|warning|suggestion",
       "line": "line number or general",
       "issue": "what is wrong",
-      "fix": "how to fix it"
+      "why": "root cause simple words",
+      "quick_fix": "fastest fix",
+      "best_fix": "production level fix"
     }}
   ],
-  "refactored_code": "improved version of the code",
-  "score": "score out of 10"
+  "refactored_code": "improved code"
 }}
 
-Code to review:
-{code}
-
-Return ONLY the JSON, no extra text.
-"""
+Code:
+{code}"""
 )
 
 def review_code(code: str, language: str) -> dict:
