@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeReview AI</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #7c6af7;
+    --accent2: #4ade80;
+    --accent3: #f97316;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+    --critical: #ef4444;
+    --warning: #f59e0b;
+    --suggestion: #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span {
+    color: var(--accent);
+  }
+
+  .badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--accent2);
+    border: 1px solid rgba(74,222,128,0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* Main layout */
+  main {
+    padding: 32px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    min-height: calc(100vh - 120px);
+  }
+
+  /* Panel */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .panel-header .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-red { background: #ef4444; }
+  .dot-yellow { background: #f59e0b; }
+  .dot-green { background: #4ade80; }
+
+  .panel-title {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-left: 4px;
+  }
+
+  .panel-body {
+    padding: 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Language select */
+  .lang-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .lang-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .lang-btn:hover, .lang-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,106,247,0.08);
+  }
+
+  /* Code textarea */
+  textarea {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 16px;
+    resize: none;
+    min-height: 340px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+  }
+
+  textarea::placeholder {
+    color: var(--muted);
+  }
+
+  /* Submit btn */
+  .submit-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .submit-btn:hover {
+    background: #6b5ce7;
+    transform: translateY(-1px);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Output panel */
+  .output-panel {
+    overflow-y: auto;
+  }
+
+  .placeholder-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    text-align: center;
+    padding: 40px;
+  }
+
+  .placeholder-state .icon {
+    font-size: 40px;
+    opacity: 0.3;
+  }
+
+  .placeholder-state p {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* Loading */
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex: 1;
+    padding: 40px;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading p {
+    font-size: 12px;
+    color: var(--muted);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* Results */
+  .results {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* Score */
+  .score-block {
+    background: rgba(124,106,247,0.08);
+    border: 1px solid rgba(124,106,247,0.2);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .score-summary {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+    opacity: 0.8;
+  }
+
+  /* Section title */
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  /* Issue card */
+  .issue-card {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    border-left: 3px solid transparent;
+    margin-bottom: 8px;
+  }
+
+  .issue-card.critical { border-color: var(--critical); }
+  .issue-card.warning { border-color: var(--warning); }
+  .issue-card.suggestion { border-color: var(--suggestion); }
+
+  .issue-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .severity-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .severity-tag.critical { background: rgba(239,68,68,0.15); color: var(--critical); }
+  .severity-tag.warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+  .severity-tag.suggestion { background: rgba(59,130,246,0.15); color: var(--suggestion); }
+
+  .line-ref {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .issue-text {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  .fix-text {
+    font-size: 11px;
+    color: var(--accent2);
+    line-height: 1.5;
+  }
+
+  /* Refactored code */
+  .code-block {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Error */
+  .error-block {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--critical);
+    line-height: 1.6;
+  }
+
+  /* History tab */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 10px 18px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <h1>Code<span>Review</span> AI</h1>
+      <div class="badge">POWERED BY GEMINI</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left: Input -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <span class="panel-title">editor</span>
+      </div>
+      <div class="panel-body">
+        <div class="lang-row" id="langRow">
+          <button class="lang-btn active" data-lang="python">Python</button>
+          <button class="lang-btn" data-lang="javascript">JavaScript</button>
+          <button class="lang-btn" data-lang="java">Java</button>
+          <button class="lang-btn" data-lang="typescript">TypeScript</button>
+          <button class="lang-btn" data-lang="go">Go</button>
+          <button class="lang-btn" data-lang="cpp">C++</button>
+        </div>
+        <textarea id="codeInput" placeholder="// Paste your code here...&#10;// AI will review bugs, security issues, best practices&#10;// and suggest improvements"></textarea>
+        <button class="submit-btn" id="reviewBtn" onclick="reviewCode()">
+          <span id="btnText">⚡ Review Code</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Output -->
+    <div class="panel output-panel">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('review')">Review</div>
+        <div class="tab" onclick="switchTab('history')">History</div>
+      </div>
+
+      <!-- Review tab -->
+      <div id="reviewTab" class="panel-body">
+        <div class="placeholder-state" id="placeholder">
+          <div class="icon">🔍</div>
+          <p>Paste your code on the left<br>and hit Review Code</p>
+        </div>
+        <div class="loading hidden" id="loading">
+          <div class="spinner"></div>
+          <p>Analyzing your code...</p>
+        </div>
+        <div class="results hidden" id="results"></div>
+      </div>
+
+      <!-- History tab -->
+      <div id="historyTab" class="panel-body hidden">
+        <div id="historyContent">
+          <div class="placeholder-state">
+            <div class="icon">📋</div>
+            <p>Your recent reviews will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let selectedLang = 'python';
+
+  // Language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedLang = btn.dataset.lang;
+    });
+  });
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    if (tab === 'review') {
+      document.getElementById('reviewTab').classList.remove('hidden');
+      document.getElementById('historyTab').classList.add('hidden');
+    } else {
+      document.getElementById('reviewTab').classList.add('hidden');
+      document.getElementById('historyTab').classList.remove('hidden');
+      loadHistory();
+    }
+  }
+
+  async function reviewCode() {
+    const code = document.getElementById('codeInput').value.trim();
+    if (!code) return;
+
+    const btn = document.getElementById('reviewBtn');
+    btn.disabled = true;
+    document.getElementById('btnText').textContent = 'Analyzing...';
+    document.getElementById('placeholder').classList.add('hidden');
+    document.getElementById('results').classList.add('hidden');
+    document.getElementById('loading').classList.remove('hidden');
+
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, language: selectedLang })
+      });
+
+      const data = await res.json();
+      const review = data.review;
+
+      document.getElementById('loading').classList.add('hidden');
+      const resultsEl = document.getElementById('results');
+      resultsEl.classList.remove('hidden');
+      resultsEl.innerHTML = renderResults(review);
+
+    } catch (err) {
+      document.getElementById('loading').classList.add('hidden');
+      const resultsEl = document.getElementById('results');
+      resultsEl.classList.remove('hidden');
+      resultsEl.innerHTML = `<div class="error-block">⚠️ Error connecting to API. Make sure the server is running on port 8000.</div>`;
+    }
+
+    btn.disabled = false;
+    document.getElementById('btnText').textContent = '⚡ Review Code';
+  }
+
+  function renderResults(review) {
+    if (review.raw) {
+      return `<div class="error-block">${review.raw}</div>`;
+    }
+
+    const score = review.score || '?';
+    const summary = review.summary || '';
+    const issues = review.issues || [];
+    const refactored = review.refactored_code || '';
+
+    let html = '';
+
+    // Score block
+    html += `
+      <div class="score-block">
+        <div>
+          <div class="score-num">${score}</div>
+          <div class="score-label">/ 10 score</div>
+        </div>
+        <div class="score-summary">${summary}</div>
+      </div>
+    `;
+
+    // Issues
+    if (issues.length > 0) {
+      html += `<div class="section-title">${issues.length} issue${issues.length > 1 ? 's' : ''} found</div>`;
+      issues.forEach(issue => {
+        const sev = (issue.severity || 'suggestion').toLowerCase();
+        html += `
+          <div class="issue-card ${sev}">
+            <div class="issue-top">
+              <span class="severity-tag ${sev}">${sev}</span>
+              <span class="line-ref">line ${issue.line || 'general'}</span>
+            </div>
+            <div class="issue-text">${issue.issue}</div>
+            <div class="fix-text">→ ${issue.fix}</div>
+          </div>
+        `;
+      });
+    } else {
+      html += `<div class="issue-card suggestion"><div class="issue-text">✅ No major issues found!</div></div>`;
+    }
+
+    // Refactored code
+    if (refactored) {
+      html += `
+        <div class="section-title">Refactored Code</div>
+        <div class="code-block">${escapeHtml(refactored)}</div>
+      `;
+    }
+
+    return html;
+  }
+
+  async function loadHistory() {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/history');
+      const data = await res.json();
+      const reviews = data.reviews || [];
+
+      if (reviews.length === 0) {
+        document.getElementById('historyContent').innerHTML = `
+          <div class="placeholder-state">
+            <div class="icon">📋</div>
+            <p>No reviews yet</p>
+          </div>`;
+        return;
+      }
+
+      let html = '';
+      reviews.forEach((r, i) => {
+        const score = r.review?.score || '?';
+        const summary = r.review?.summary || '';
+        const lang = r.language || '';
+        html += `
+          <div class="issue-card suggestion" style="margin-bottom:10px">
+            <div class="issue-top">
+              <span class="severity-tag suggestion">${lang}</span>
+              <span class="line-ref">Score: ${score}/10</span>
+            </div>
+            <div class="issue-text">${summary}</div>
+          </div>
+        `;
+      });
+      document.getElementById('historyContent').innerHTML = html;
+    } catch {
+      document.getElementById('historyContent').innerHTML = `<div class="error-block">Could not load history</div>`;
+    }
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
