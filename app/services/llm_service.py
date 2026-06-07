@@ -1,12 +1,12 @@
+from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-2.0-flash",
     google_api_key=os.getenv("GEMINI_API_KEY")
 )
 
@@ -21,7 +21,7 @@ Provide feedback in this exact JSON format:
   "issues": [
     {{
       "severity": "critical/warning/suggestion",
-      "line": "line number or 'general'",
+      "line": "line number or general",
       "issue": "what is wrong",
       "fix": "how to fix it"
     }}
